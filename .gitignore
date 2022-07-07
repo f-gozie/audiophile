@@ -327,3 +327,4 @@ sme_backend/media/
 .env
 .envs/*
 !.envs/.local/
+*.db

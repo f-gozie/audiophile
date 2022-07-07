@@ -1,11 +1,11 @@
-from typing import Any, List, Iterator, Tuple
+from typing import Any, Iterator, List, Tuple
 
 import torch
 import torchaudio
 import torchaudio.transforms as transforms
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 
+from audiophile.schema import Prediction
 
 app = FastAPI()
 
@@ -23,12 +23,6 @@ class Model:
             Float value representing the confidence of the prediction
         """
         return float(torch.rand(1))
-
-
-class Prediction(BaseModel):
-    phrase: str
-    time: int
-    confidence: float
 
 
 MODEL_CONFIDENCE_THRESHOLD = 0.9
