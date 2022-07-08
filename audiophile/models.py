@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import object_session, relationship
 from sqlalchemy.sql import func
 
 from audiophile.config.database import Base
@@ -10,10 +10,22 @@ class File(Base):
     id = Column(Integer, primary_key=True)
     file = Column(String, unique=True)
     duration = Column(Integer)
-    confidences = relationship("Prediction", back_populates="file")
+    confidences = relationship(
+        "Prediction", backref="files", lazy=True, cascade="all, delete-orphan"
+    )
+    reference = Column(String, unique=True)
 
     def __repr__(self):
         return f"<File(name='{self.file}', duration='{self.duration}')>"
+
+    def confidences_filtered(self, reference):
+        return (
+            object_session(self)
+            .query(Prediction)
+            .with_parent(self)
+            .filter(Prediction.reference == reference)
+            .all()
+        )
 
 
 class Prediction(Base):
@@ -22,9 +34,9 @@ class Prediction(Base):
     utterance = Column(String)
     time = Column(Integer)
     confidence = Column(Float)
+    reference = Column(String)
     created_at = Column(DateTime, default=func.now())
     file_id = Column(Integer, ForeignKey("files.id"))
-    file = relationship("File", back_populates="confidences")
 
     def __repr__(self):
-        return f"<Prediction(phrase='{self.phrase}', time='{self.time}', confidence='{self.confidence}')>"
+        return f"<Prediction(phrase='{self.utterance}', time='{self.time}', confidence='{self.confidence}')>"

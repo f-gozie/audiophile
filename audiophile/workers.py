@@ -19,6 +19,7 @@ def get_file(db: Session, file_id: int) -> schema.File:
     file = db.query(models.File).filter(models.File.id == file_id).first()
     if not file:
         raise HTTPException(404, f"File with id {file_id} not found in database")
+    file.confidences = file.confidences_filtered(file.reference)
     return file
 
 
@@ -53,7 +54,28 @@ def create_file(db: Session, file_name: str, file_duration: int) -> int:
     return file.id
 
 
-def get_or_create_file(db: Session, **kwargs) -> Tuple[int, bool]:
+def update_file(db: Session, file_id: int, **kwargs) -> int:
+    """Update a file in the database
+
+    Args:
+        db: SQLAlchemy session object
+        file_id: The id of the file to be updated
+        kwargs: The keyword arguments to be used to update the file
+
+    Returns:
+        The id of the updated file
+    """
+    file = db.query(models.File).filter(models.File.id == file_id).first()
+    if not file:
+        raise HTTPException(404, f"File with id {file_id} not found in database")
+    for key, value in kwargs.items():
+        setattr(file, key, value)
+    db.commit()
+    db.refresh(file)
+    return file.id
+
+
+def get_or_create_file(db: Session, **kwargs) -> Tuple[models.File, bool]:
     """Get or create a file in the database
 
     Args:
@@ -71,11 +93,16 @@ def get_or_create_file(db: Session, **kwargs) -> Tuple[int, bool]:
         db.commit()
         db.refresh(file)
         created = True
-    return file.id, created
+    return file, created
 
 
 def create_prediction(
-    db: Session, file_id: int, utterance: str, confidence: float, time: int
+    db: Session,
+    file_id: int,
+    utterance: str,
+    confidence: float,
+    time: int,
+    reference: str,
 ) -> int:
     """Create a new prediction in the database
 
@@ -85,12 +112,17 @@ def create_prediction(
         utterance: The phrase detected in the audio file
         confidence: The confidence of the prediction to be created
         time: The time at which the phrase was detected
+        reference: The reference used to get the latest predictions
 
     Returns:
         The id of the newly created prediction
     """
     prediction = models.Prediction(
-        file_id=file_id, utterance=utterance, confidence=confidence, time=time
+        file_id=file_id,
+        utterance=utterance,
+        confidence=confidence,
+        time=time,
+        reference=reference,
     )
     db.add(prediction)
     db.commit()

@@ -1,3 +1,4 @@
+import uuid
 import wave
 from typing import Dict, Iterator, List, Tuple
 
@@ -79,3 +80,12 @@ def get_file_predictions(base_url: str, phrase: str, audio_loc: str) -> List[Dic
     phrase_detection_path = f"/api/detect/{phrase}/{audio_loc}"
     response = requests.get(base_url + phrase_detection_path)
     return response.json()
+
+
+def generate_unique_reference_id() -> str:
+    """Generate a unique reference id
+
+    Returns:
+        A unique reference id
+    """
+    return str(uuid.uuid4())

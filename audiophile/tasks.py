@@ -17,18 +17,21 @@ def generate_predictions(base_url):
                     file_path = os.path.join(root, file)
                     file_name = file.split(".")[0]
                     file_duration = helpers.get_file_duration(file_path)
-                    file_id, created = workers.get_or_create_file(
+                    file_obj, created = workers.get_or_create_file(
                         file=file_name, duration=file_duration, db=db
                     )
                     phrases = MODEL_DICT.keys()
+                    reference = helpers.generate_unique_reference_id()
                     for phrase in phrases:
                         file_predictions = helpers.get_file_predictions(
                             base_url, phrase, file
                         )
                         for prediction in file_predictions:
+                            prediction["reference"] = reference
                             workers.create_prediction(
-                                db=db, file_id=file_id, **prediction
+                                db=db, file_id=file_obj.id, **prediction
                             )
+                    workers.update_file(db=db, file_id=file_obj.id, reference=reference)
         print(f"The time is executing. Current time is {datetime.datetime.now()}")
         files = db.query(models.File).all()
     return None
