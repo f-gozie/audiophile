@@ -1,8 +1,10 @@
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from . import models, schema, workers
 from .database import SessionLocal, engine
+from .tasks import generate_predictions
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -15,6 +17,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.on_event("startup")
+def refresh_predictions():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(generate_predictions, "interval", seconds=1)
+    scheduler.start()
 
 
 @app.get("/api/files/{file_id}/", response_model=schema.File)
