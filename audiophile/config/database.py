@@ -12,7 +12,6 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///./sqlite.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    echo=True,
     connect_args={"check_same_thread": False},  # noqa: E501
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

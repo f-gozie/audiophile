@@ -328,3 +328,4 @@ sme_backend/media/
 .envs/*
 !.envs/.local/
 *.db
+*media/

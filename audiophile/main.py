@@ -1,4 +1,5 @@
 from typing import Any, List
+from functools import lru_cache
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException
@@ -12,6 +13,7 @@ from .tasks import generate_predictions
 from .utils.constants import (MODEL_CONFIDENCE_THRESHOLD, MODEL_DICT,
                               SAMPLE_RATE)
 from .utils.helpers import iterate_call, load_resampled
+from .config.configuration import settings
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -29,7 +31,7 @@ def get_db():
 @app.on_event("startup")
 def refresh_predictions():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(generate_predictions, "interval", minutes=2)
+    scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], minutes=2)
     scheduler.start()
 
 
@@ -38,6 +40,13 @@ def get_file_details(file_id: int, db: Session = Depends(get_db)) -> Any:
     """Get detail for a given file_id"""
     file = workers.get_file(db, file_id)
     return file
+
+
+@app.get("/api/files/", response_model=List[schema.File])
+def get_files(db: Session = Depends(get_db)) -> Any:
+    """Get all files in the database"""
+    files = workers.get_files(db)
+    return files
 
 
 @app.get("/api/detect/{utterance}/{audio_loc}", response_model=List[Prediction])
@@ -68,7 +77,7 @@ def generate_phrase_detections(utterance: str, audio_loc: str) -> Any:
         if confidence > MODEL_CONFIDENCE_THRESHOLD:
             predictions.append(
                 Prediction(
-                    phrase=utterance, time=time / SAMPLE_RATE, confidence=confidence
+                    utterance=utterance, time=time / SAMPLE_RATE, confidence=confidence
                 )
             )
 
