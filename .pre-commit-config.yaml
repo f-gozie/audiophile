@@ -1,4 +1,4 @@
-exclude: "inference.py|models.py"
+exclude: "inference.py|main.py"
 default_stages: [commit]
 
 repos:

@@ -1,9 +1,8 @@
-from sqlalchemy import (Column, DateTime, Float, ForeignKey, Integer, String,
-                        Time)
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .database import Base
+from audiophile.config.database import Base
 
 
 class File(Base):

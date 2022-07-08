@@ -1,7 +1,7 @@
 import datetime
 
 from audiophile import models
-from audiophile.database import SessionLocal
+from audiophile.config.database import SessionLocal
 
 # import requests
 
