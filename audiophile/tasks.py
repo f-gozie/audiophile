@@ -1,7 +1,6 @@
-import datetime
 import os
 
-from audiophile import models, workers
+from audiophile import workers
 from audiophile.config.database import SessionLocal
 from audiophile.utils import helpers
 from audiophile.utils.constants import keywords as phrases
@@ -12,7 +11,6 @@ def generate_predictions(base_url):
         audio_files_path = f"{os.getcwd()}/audiophile/utils/media/"
         for root, dirs, files in os.walk(audio_files_path):
             for file in files:
-                pass
                 if file.endswith(".wav"):
                     file_path = os.path.join(root, file)
                     file_name = file.split(".")[0]
@@ -31,6 +29,3 @@ def generate_predictions(base_url):
                                 db=db, file_id=file_obj.id, **prediction
                             )
                     workers.update_file(db=db, file_id=file_obj.id, reference=reference)
-        print(f"The time is executing. Current time is {datetime.datetime.now()}")
-        files = db.query(models.File).all()
-    return None
