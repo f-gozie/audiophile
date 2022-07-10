@@ -4,30 +4,21 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from . import models, schema
-from .config.configuration import Settings
 from .services.buckets import S3Service
 
 
-async def upload_file(file: UploadFile, settings: Settings):
+async def upload_file(file: UploadFile, s3_client: S3Service):
     """Upload a file to the database
 
     Args:
         file: The file blob to be uploaded
-        settings: The settings for all environment variables
+        s3_client: The s3 client for making requests to the s3 bucket
 
     Returns:
         The id of the uploaded file
     """
-    s3_client = S3Service(
-        bucket_name=settings.AWS_S3_BUCKET,
-        region_name=settings.AWS_REGION,
-        access_key=settings.AWS_ACCESS_KEY_ID,
-        secret_key=settings.AWS_SECRET_ACCESS_KEY,
-    )
     file_bytes_obj = file.file.read()
-    upload_obj = await s3_client.upload_file(file_bytes_obj, file)
-    if not upload_obj:
-        raise HTTPException(500, "Error uploading file")
+    await s3_client.upload_file(file_bytes_obj, file)
 
 
 def get_file(db: Session, file_id: int) -> schema.File:

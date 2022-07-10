@@ -8,6 +8,7 @@ from audiophile.config.database import SessionLocal, engine
 
 from . import models, schema, workers
 from .schema import Prediction
+from .services.buckets import S3Service
 from .tasks import generate_predictions
 from .utils.constants import (MODEL_CONFIDENCE_THRESHOLD, MODEL_DICT,
                               SAMPLE_RATE)
@@ -42,7 +43,13 @@ async def create_file(file: UploadFile = File(...)):
     Returns:
         A success message if file was uploaded successfully
     """
-    await workers.upload_file(file, settings)
+    s3_client = S3Service(
+        bucket_name=settings.AWS_S3_BUCKET,
+        region_name=settings.AWS_REGION,
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    await workers.upload_file(file, s3_client)
     return {"status": "Uploaded successfully"}
 
 
