@@ -2,7 +2,7 @@ from typing import Any, List
 from functools import lru_cache
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 
 from audiophile.config.database import SessionLocal, engine
@@ -33,6 +33,18 @@ def refresh_predictions():
     scheduler = BackgroundScheduler()
     scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], minutes=2)
     scheduler.start()
+
+
+@app.post("/api/files/upload")
+async def create_file(file: UploadFile = File(...)):
+    """Create a new file in the database
+    Args:
+        file: The file to be uploaded
+    Returns:
+        A success message if file was uploaded successfully
+    """
+    await workers.upload_file(file, settings.FILE_PATH)
+    return {"message": f"File {file.filename} uploaded successfully"}
 
 
 @app.get("/api/files/{file_id}/", response_model=schema.File)

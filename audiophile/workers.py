@@ -1,9 +1,26 @@
 from typing import List, Tuple
 
-from fastapi import HTTPException
+import aiofiles as aiofiles
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from . import models, schema
+
+
+async def upload_file(file: UploadFile, file_path: str) -> None:
+    """Upload a file to the database
+
+    Args:
+        file: The file blob to be uploaded
+        file_path: The path to the file to be uploaded
+
+    Returns:
+        The id of the uploaded file
+    """
+    file_location = f"{file_path}/{file.filename}"
+    async with aiofiles.open(file_location, "wb+") as file_object:
+        while content := await file.read(1024):
+            await file_object.write(content)
 
 
 def get_file(db: Session, file_id: int) -> schema.File:

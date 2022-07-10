@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     """
 
     BASE_URL: str
+    FILE_PATH: str = "audiophile/utils/media"
 
     class Config:
         env_file = ".env"
