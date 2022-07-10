@@ -1,13 +1,12 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
-import aiofiles as aiofiles
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from . import models, schema
 
 
-async def upload_file(file: UploadFile, file_path: str) -> None:
+def upload_file(file: UploadFile, file_path: str) -> Dict:
     """Upload a file to the database
 
     Args:
@@ -18,9 +17,10 @@ async def upload_file(file: UploadFile, file_path: str) -> None:
         The id of the uploaded file
     """
     file_location = f"{file_path}/{file.filename}"
-    async with aiofiles.open(file_location, "wb+") as file_object:
-        while content := await file.read(1024):
-            await file_object.write(content)
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+
+    return {"message": f"File {file.filename} uploaded successfully"}
 
 
 def get_file(db: Session, file_id: int) -> schema.File:

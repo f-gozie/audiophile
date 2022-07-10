@@ -36,15 +36,15 @@ def refresh_predictions():
 
 
 @app.post("/api/files/upload")
-async def create_file(file: UploadFile = File(...)):
+def create_file(file: UploadFile = File(...)):
     """Create a new file in the database
     Args:
         file: The file to be uploaded
     Returns:
         A success message if file was uploaded successfully
     """
-    await workers.upload_file(file, settings.FILE_PATH)
-    return {"message": f"File {file.filename} uploaded successfully"}
+    response = workers.upload_file(file, settings.FILE_PATH)
+    return response
 
 
 @app.get("/api/files/{file_id}/", response_model=schema.File)
