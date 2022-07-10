@@ -329,3 +329,4 @@ sme_backend/media/
 !.envs/.local/
 *.db
 *media/
+SoftwareEngineerTask.md
