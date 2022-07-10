@@ -134,6 +134,7 @@ def create_prediction(
     confidence: float,
     time: int,
     reference: str,
+    model: str,
 ) -> int:
     """Create a new prediction in the database
 
@@ -144,6 +145,7 @@ def create_prediction(
         confidence: The confidence of the prediction to be created
         time: The time at which the phrase was detected
         reference: The reference used to get the latest predictions
+        model: The model the inference was run on
 
     Returns:
         The id of the newly created prediction
@@ -154,6 +156,7 @@ def create_prediction(
         confidence=confidence,
         time=time,
         reference=reference,
+        model=model,
     )
     db.add(prediction)
     db.commit()

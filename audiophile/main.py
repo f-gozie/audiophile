@@ -10,8 +10,7 @@ from . import models, schema, workers
 from .schema import Prediction
 from .services.buckets import S3Service
 from .tasks import generate_predictions
-from .utils.constants import (MODEL_CONFIDENCE_THRESHOLD, MODEL_DICT,
-                              SAMPLE_RATE)
+from .utils.constants import MODEL_CONFIDENCE_THRESHOLD, SAMPLE_RATE, inference_models, keywords
 from .utils.helpers import iterate_call, load_resampled
 from .config.configuration import settings
 
@@ -65,7 +64,7 @@ def local_upload(file: UploadFile = File(...)):
     Returns:
         A success message if file was uploaded successfully
     """
-    response = workers.upload_file_to_local(file)
+    response = workers.upload_file_to_local(file, settings.FILE_PATH)
     return response
 
 
@@ -93,9 +92,7 @@ def generate_phrase_detections(utterance: str, audio_loc: str) -> Any:
         audio_loc: The full or relative path to the audio file for which inference
             is to be executed
     """
-    try:
-        model = MODEL_DICT[utterance]
-    except KeyError:
+    if utterance not in keywords:
         raise HTTPException(
             404, f"Utterance {utterance} not found in local model dictionary"
         )
@@ -107,12 +104,17 @@ def generate_phrase_detections(utterance: str, audio_loc: str) -> Any:
 
     predictions = []
     for time, audio_snip in iterate_call(resampled_audio):
-        confidence = model(audio_snip)
-        if confidence > MODEL_CONFIDENCE_THRESHOLD:
-            predictions.append(
-                Prediction(
-                    utterance=utterance, time=time / SAMPLE_RATE, confidence=confidence
+        for model in inference_models:
+            model_name = model.__class__.__name__
+            confidence = model(audio_snip)
+            if confidence > MODEL_CONFIDENCE_THRESHOLD:
+                predictions.append(
+                    Prediction(
+                        utterance=utterance,
+                        time=time / SAMPLE_RATE,
+                        confidence=confidence,
+                        model=model_name
+                    )
                 )
-            )
 
     return predictions

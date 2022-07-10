@@ -7,6 +7,7 @@ class Prediction(BaseModel):
     utterance: str
     time: int
     confidence: float
+    model: str
 
     class Config:
         orm_mode = True

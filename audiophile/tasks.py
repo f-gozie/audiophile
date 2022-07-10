@@ -4,7 +4,7 @@ import os
 from audiophile import models, workers
 from audiophile.config.database import SessionLocal
 from audiophile.utils import helpers
-from audiophile.utils.constants import MODEL_DICT
+from audiophile.utils.constants import keywords as phrases
 
 
 def generate_predictions(base_url):
@@ -20,7 +20,6 @@ def generate_predictions(base_url):
                     file_obj, created = workers.get_or_create_file(
                         file=file_name, duration=file_duration, db=db
                     )
-                    phrases = MODEL_DICT.keys()
                     reference = helpers.generate_unique_reference_id()
                     for phrase in phrases:
                         file_predictions = helpers.get_file_predictions(

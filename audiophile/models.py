@@ -27,6 +27,15 @@ class File(Base):
             .all()
         )
 
+    def confidences_filtered_by_model(self, model):
+        return (
+            object_session(self)
+            .query(Prediction)
+            .with_parent(self)
+            .filter(Prediction.model == model)
+            .all()
+        )
+
 
 class Prediction(Base):
     __tablename__ = "predictions"
@@ -35,6 +44,7 @@ class Prediction(Base):
     time = Column(Integer)
     confidence = Column(Float)
     reference = Column(String)
+    model = Column(String)
     created_at = Column(DateTime, default=func.now())
     file_id = Column(Integer, ForeignKey("files.id"))
 
