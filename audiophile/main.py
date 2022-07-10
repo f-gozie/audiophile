@@ -35,11 +35,13 @@ def refresh_predictions():
     scheduler.start()
 
 
-@app.post("/api/files/upload")
-async def create_file(file: UploadFile = File(...)):
-    """Create a new file in the database
+@app.post("/api/files/upload/s3")
+async def s3_upload(file: UploadFile = File(...)):
+    """Create a new file in s3 bucket
+
     Args:
         file: The file to be uploaded
+
     Returns:
         A success message if file was uploaded successfully
     """
@@ -49,8 +51,22 @@ async def create_file(file: UploadFile = File(...)):
         access_key=settings.AWS_ACCESS_KEY_ID,
         secret_key=settings.AWS_SECRET_ACCESS_KEY,
     )
-    await workers.upload_file(file, s3_client)
+    await workers.upload_file_to_s3(file, s3_client)
     return {"status": "Uploaded successfully"}
+
+
+@app.post("/api/files/upload")
+def local_upload(file: UploadFile = File(...)):
+    """Upload a new file to local storage
+
+    Args:
+        file: The file to be uploaded
+
+    Returns:
+        A success message if file was uploaded successfully
+    """
+    response = workers.upload_file_to_local(file)
+    return response
 
 
 @app.get("/api/files/{file_id}/", response_model=schema.File)

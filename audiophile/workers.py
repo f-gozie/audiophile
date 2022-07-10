@@ -7,8 +7,8 @@ from . import models, schema
 from .services.buckets import S3Service
 
 
-async def upload_file(file: UploadFile, s3_client: S3Service):
-    """Upload a file to the database
+async def upload_file_to_s3(file: UploadFile, s3_client: S3Service):
+    """Upload a file to s3 bucket
 
     Args:
         file: The file blob to be uploaded
@@ -19,6 +19,22 @@ async def upload_file(file: UploadFile, s3_client: S3Service):
     """
     file_bytes_obj = file.file.read()
     await s3_client.upload_file(file_bytes_obj, file)
+
+
+def upload_file_to_local(file: UploadFile, file_path: str):
+    """Upload a file to local disk
+
+    Args:
+        file: The file blob to be uploaded
+        file_path: The path to the file to be uploaded
+
+    Returns:
+        The id of the uploaded file
+    """
+    file_bytes_obj = file.file.read()
+    with open(file_path, "wb+") as f:
+        f.write(file_bytes_obj)
+    return {"message": f"File {file.filename} uploaded successfully"}
 
 
 def get_file(db: Session, file_id: int) -> schema.File:
