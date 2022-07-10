@@ -1,26 +1,33 @@
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from . import models, schema
+from .config.configuration import Settings
+from .services.buckets import S3Service
 
 
-def upload_file(file: UploadFile, file_path: str) -> Dict:
+async def upload_file(file: UploadFile, settings: Settings):
     """Upload a file to the database
 
     Args:
         file: The file blob to be uploaded
-        file_path: The path to the file to be uploaded
+        settings: The settings for all environment variables
 
     Returns:
         The id of the uploaded file
     """
-    file_location = f"{file_path}/{file.filename}"
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
-
-    return {"message": f"File {file.filename} uploaded successfully"}
+    s3_client = S3Service(
+        bucket_name=settings.AWS_S3_BUCKET,
+        region_name=settings.AWS_REGION,
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    file_bytes_obj = file.file.read()
+    upload_obj = await s3_client.upload_file(file_bytes_obj, file)
+    if not upload_obj:
+        raise HTTPException(500, "Error uploading file")
 
 
 def get_file(db: Session, file_id: int) -> schema.File:

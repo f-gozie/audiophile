@@ -1,5 +1,4 @@
 from typing import Any, List
-from functools import lru_cache
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
@@ -36,15 +35,15 @@ def refresh_predictions():
 
 
 @app.post("/api/files/upload")
-def create_file(file: UploadFile = File(...)):
+async def create_file(file: UploadFile = File(...)):
     """Create a new file in the database
     Args:
         file: The file to be uploaded
     Returns:
         A success message if file was uploaded successfully
     """
-    response = workers.upload_file(file, settings.FILE_PATH)
-    return response
+    await workers.upload_file(file, settings)
+    return {"status": "Uploaded successfully"}
 
 
 @app.get("/api/files/{file_id}/", response_model=schema.File)
