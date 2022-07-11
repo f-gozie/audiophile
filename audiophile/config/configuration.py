@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     Settings for the application
     """
 
-    BASE_URL: str
+    BASE_URL: str = "http://localhost:8000"
     FILE_PATH: str = "audiophile/utils/media"
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
