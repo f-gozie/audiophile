@@ -30,7 +30,7 @@ def get_db():
 @app.on_event("startup")
 def refresh_predictions():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], minutes=2)
+    scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], hours=2)
     scheduler.start()
 
 
@@ -80,6 +80,15 @@ def get_files(db: Session = Depends(get_db)) -> Any:
     """Get all files in the database"""
     files = workers.get_files(db)
     return files
+
+
+@app.get("/api/files/{file_id}/{model}/", response_model=schema.File)
+def get_file_prediction_filtered_by_model(
+    file_id: int, model: str, db: Session = Depends(get_db)
+) -> Any:
+    """Get file prediction filtered by model"""
+    file = workers.get_file_prediction_filtered_by_model(db, file_id, model)
+    return file
 
 
 @app.get("/api/detect/{utterance}/{audio_loc}", response_model=List[Prediction])

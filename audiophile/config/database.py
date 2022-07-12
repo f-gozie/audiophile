@@ -1,19 +1,17 @@
-# from decouple import config
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# SQLALCHEMY_DATABASE_URL = (
-#     f"postgresql://{config('DB_USER')}:"
-#     f"{config('DB_PASSWORD')}@{config('DB_HOST')}:"
-#     f"{config('DB_PORT')}/{config('DB_NAME')}"
-# )
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sqlite.db"
+from audiophile.config.configuration import settings
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # noqa: E501
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{settings.DB_USER}:"
+    f"{settings.DB_PASSWORD}@{settings.DB_HOST}:"
+    f"{settings.DB_PORT}/{settings.DB_NAME}"
 )
+# SQLALCHEMY_DATABASE_URL = "sqlite:///./sqlite.db"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)  # noqa: E501
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

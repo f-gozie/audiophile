@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from . import models, schema
 from .services.buckets import S3Service
+from .utils.constants import inference_models
 
 
 async def upload_file_to_s3(file: UploadFile, s3_client: S3Service):
@@ -51,6 +52,29 @@ def get_file(db: Session, file_id: int) -> schema.File:
     if not file:
         raise HTTPException(404, f"File with id {file_id} not found in database")
     file.confidences = file.confidences_filtered(file.reference)
+    return file
+
+
+def get_file_prediction_filtered_by_model(
+    db: Session, file_id: int, model: str
+) -> schema.File:
+    """Get all files in the database filtered by model
+
+    Args:
+        db: SQLAlchemy session object
+        file_id: The id of the file for which predictions are to be retrieved
+        model: The model for which to filter the files
+
+    Returns:
+        A file detail containing predictions for a particular file filtered by the model
+    """
+    allowed_models = [model.__class__.__name__ for model in inference_models]
+    if model not in allowed_models:
+        raise HTTPException(400, f"Model {model} not supported")
+    file = db.query(models.File).filter(models.File.id == file_id).first()
+    if not file:
+        raise HTTPException(404, f"File with id {file_id} not found in database")
+    file.confidences = file.confidences_filtered_by_model(model)
     return file
 
 
@@ -116,7 +140,14 @@ def get_or_create_file(db: Session, **kwargs) -> Tuple[models.File, bool]:
     Returns:
         The id of the newly created file
     """
-    file = db.query(models.File).filter_by(**kwargs).first()
+    file = (
+        db.query(models.File)
+        .filter(
+            models.File.file == kwargs["file"]
+            and models.File.duration == kwargs["duration"]
+        )
+        .first()
+    )
     created = False
     if not file:
         file = models.File(**kwargs)

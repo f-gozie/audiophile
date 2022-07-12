@@ -15,7 +15,7 @@ def generate_predictions(base_url):
                     file_path = os.path.join(root, file)
                     file_name = file.split(".")[0]
                     file_duration = helpers.get_file_duration(file_path)
-                    file_obj, created = workers.get_or_create_file(
+                    file_obj, _ = workers.get_or_create_file(
                         file=file_name, duration=file_duration, db=db
                     )
                     reference = helpers.generate_unique_reference_id()
