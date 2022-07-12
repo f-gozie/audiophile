@@ -1,1 +1,1 @@
-web uvicorn audiophile.main:app --host=0.0.0.0 --port=${PORT: -5000} --log-level=info --workers=2
+web: uvicorn audiophile.main:app --host=0.0.0.0 --port=${PORT:-5000}
