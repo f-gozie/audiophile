@@ -8,7 +8,7 @@ from audiophile.utils.constants import keywords as phrases
 
 def generate_predictions(base_url):
     with SessionLocal() as db:
-        audio_files_path = f"{os.getcwd()}/audiophile/utils/media/"
+        audio_files_path = f"{os.getcwd()}/utils/media/"
         for root, dirs, files in os.walk(audio_files_path):
             for file in files:
                 if file.endswith(".wav"):
