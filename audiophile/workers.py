@@ -33,7 +33,8 @@ def upload_file_to_local(file: UploadFile, file_path: str):
         The id of the uploaded file
     """
     file_bytes_obj = file.file.read()
-    with open(file_path, "wb+") as f:
+    file_location = f"{file_path}/{file.filename}"
+    with open(file_location, "wb+") as f:
         f.write(file_bytes_obj)
     return {"message": f"File {file.filename} uploaded successfully"}
 
