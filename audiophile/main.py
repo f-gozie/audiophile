@@ -30,7 +30,7 @@ def get_db():
 @app.on_event("startup")
 def refresh_predictions():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], hours=5)
+    scheduler.add_job(generate_predictions, "interval", [settings.BASE_URL], minutes=2)
     scheduler.start()
 
 
