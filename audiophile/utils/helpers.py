@@ -1,10 +1,15 @@
+import json
 import uuid
 import wave
 from typing import Dict, Iterator, List, Tuple
 
+import pandas as pd
 import requests
 import torch
 import torchaudio
+from evidently import ColumnMapping
+from evidently.model_profile import Profile
+from evidently.model_profile.sections import DataDriftProfileSection
 from torchaudio import transforms
 
 
@@ -89,3 +94,25 @@ def generate_unique_reference_id() -> str:
         A unique reference id
     """
     return str(uuid.uuid4())
+
+
+def does_data_drift_exist(existing_data: pd.DataFrame, new_data: List[Dict]) -> bool:
+    """Check if the predictions are within the duration of the audio file
+
+    Args:
+        existing_data: Data to compare against
+        new_data: New data to be compared
+
+    Returns:
+        True if the current data is corrupted and would cause data drift, else False
+    """
+    existing_data = existing_data.drop(["id", "file_id", "reference"], axis=1)
+    column_map = ColumnMapping(target="confidence")
+    new_data = pd.DataFrame.from_records(new_data)
+
+    drift_profile = Profile(sections=[DataDriftProfileSection()])
+    drift_profile.calculate(existing_data, new_data, column_map)
+    drift_data = dict(json.loads(drift_profile.json()))
+    if drift_data["data_drift"]["data"]["metrics"]["confidence"]["drift_detected"]:
+        return True
+    return False

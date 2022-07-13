@@ -13,11 +13,11 @@ class Settings(BaseSettings):
     AWS_REGION: str = ""
     AWS_S3_BUCKET: str = ""
     S3_BUCKET_URL: str = ""
-    DB_USER: str = ""
-    DB_PASSWORD: str = ""
-    DB_HOST: str = ""
-    DB_PORT: str = ""
-    DB_NAME: str = ""
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_HOST: str = ""
+    POSTGRES_PORT: str = ""
+    POSTGRES_DB: str = ""
 
     class Config:
         env_file = ".env"

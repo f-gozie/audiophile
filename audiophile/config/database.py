@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 from audiophile.config.configuration import settings
 
 SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{settings.DB_USER}:"
-    f"{settings.DB_PASSWORD}@{settings.DB_HOST}:"
-    f"{settings.DB_PORT}/{settings.DB_NAME}"
+    f"postgresql://{settings.POSTGRES_USER}:"
+    f"{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:"
+    f"{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 )
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./sqlite.db"
 
