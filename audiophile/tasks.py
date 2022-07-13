@@ -1,20 +1,19 @@
 import os
 
-import pandas as pd
-
 from audiophile import models, workers
 from audiophile.config.database import SessionLocal
 from audiophile.utils import helpers
 from audiophile.utils.constants import keywords as phrases
 
 
-def generate_predictions(base_url):
+def generate_predictions():
     with SessionLocal() as db:
         audio_files_path = f"{os.getcwd()}/audiophile/utils/media/"
-        predictions = db.query(models.Prediction)
-        reference_data = pd.read_sql(predictions.statement, predictions.session.bind)
+        existing_predictions = db.query(models.Prediction)
+        print(
+            f"Started running task. Current total number of predictions: {existing_predictions.count()}"
+        )
         corrupt_predictions = []
-
         for root, dirs, files in os.walk(audio_files_path):
             for file in files:
                 if file.endswith(".wav"):
@@ -26,11 +25,12 @@ def generate_predictions(base_url):
                     )
                     reference = helpers.generate_unique_reference_id()
                     for phrase in phrases:
-                        file_predictions = helpers.get_file_predictions(
-                            base_url, phrase, file
+                        file_predictions = workers.generate_phrase_detections(
+                            phrase, file
                         )
+                        file_predictions = [data.__dict__ for data in file_predictions]
                         if helpers.does_data_drift_exist(
-                            reference_data, file_predictions
+                            existing_predictions, file_predictions
                         ):
                             # At this point, we could choose to email an admin or decide to not
                             # add this set of predictions to our existing predictions
@@ -41,3 +41,6 @@ def generate_predictions(base_url):
                                 db=db, file_id=file_obj.id, **prediction
                             )
                     workers.update_file(db=db, file_id=file_obj.id, reference=reference)
+        print(
+            f"Finished running task. Current total number of predictions: {db.query(models.Prediction).count()}"
+        )

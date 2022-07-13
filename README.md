@@ -63,8 +63,6 @@ https://www.github.com/f-gozie
 
 To run this project, you will need to add the following environment variables to your .env file
 
-### Mandatory .env Variables
-`BASE_URL`: defaults to http://localhost:8000 if not specified
 
 ### Mandatory -ish .env Variables
 This is for if you choose to run this project with POSTGRESQL as the database. You'd need to add

@@ -10,7 +10,10 @@ import torchaudio
 from evidently import ColumnMapping
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataDriftProfileSection
+from sqlalchemy.orm import Query
 from torchaudio import transforms
+
+from audiophile import models
 
 
 def load_resampled(audio_loc: str, resample_rate: int = 8000) -> torch.tensor:
@@ -96,7 +99,9 @@ def generate_unique_reference_id() -> str:
     return str(uuid.uuid4())
 
 
-def does_data_drift_exist(existing_data: pd.DataFrame, new_data: List[Dict]) -> bool:
+def does_data_drift_exist(
+    existing_data: Query, new_data: List[models.Prediction]
+) -> bool:
     """Check if the predictions are within the duration of the audio file
 
     Args:
@@ -106,12 +111,17 @@ def does_data_drift_exist(existing_data: pd.DataFrame, new_data: List[Dict]) -> 
     Returns:
         True if the current data is corrupted and would cause data drift, else False
     """
-    existing_data = existing_data.drop(["id", "file_id", "reference"], axis=1)
+    if existing_data.count() < 300:
+        return False
+    existing_df = pd.read_sql(existing_data.statement, existing_data.session.bind)
+    existing_df = existing_df.drop(
+        ["id", "file_id", "reference", "created_at"], axis=1, errors="ignore"
+    )
     column_map = ColumnMapping(target="confidence")
     new_data = pd.DataFrame.from_records(new_data)
 
     drift_profile = Profile(sections=[DataDriftProfileSection()])
-    drift_profile.calculate(existing_data, new_data, column_map)
+    drift_profile.calculate(existing_df, new_data, column_map)
     drift_data = dict(json.loads(drift_profile.json()))
     if drift_data["data_drift"]["data"]["metrics"]["confidence"]["drift_detected"]:
         return True

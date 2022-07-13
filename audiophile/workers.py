@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from . import models, schema
 from .services.buckets import S3Service
-from .utils.constants import inference_models
+from .utils.constants import MODEL_CONFIDENCE_THRESHOLD, SAMPLE_RATE, inference_models, keywords
+from .utils.helpers import iterate_call, load_resampled
 
 
 async def upload_file_to_s3(file: UploadFile, s3_client: S3Service):
@@ -194,3 +195,42 @@ def create_prediction(
     db.commit()
     db.refresh(prediction)
     return prediction.id
+
+
+def generate_phrase_detections(
+    utterance: str, audio_loc: str
+) -> List[models.Prediction]:
+    """Run inference on an audio file with a model for an utterance. Currently
+    available utterances are: "call", "is", "recorded"
+
+    Args:
+        utterance: Case sensitive name of the model to be used for inference
+        audio_loc: The full or relative path to the audio file for which inference
+            is to be executed
+    """
+    if utterance not in keywords:
+        raise HTTPException(
+            404, f"Utterance {utterance} not found in local model dictionary"
+        )
+
+    try:
+        resampled_audio = load_resampled(audio_loc, SAMPLE_RATE)
+    except FileNotFoundError:
+        raise HTTPException(404, f"File {audio_loc} not found")
+
+    predictions = []
+    for time, audio_snip in iterate_call(resampled_audio):
+        for model in inference_models:
+            model_name = model.__class__.__name__
+            confidence = model(audio_snip)
+            if confidence > MODEL_CONFIDENCE_THRESHOLD:
+                predictions.append(
+                    schema.Prediction(
+                        utterance=utterance,
+                        time=time / SAMPLE_RATE,
+                        confidence=confidence,
+                        model=model_name,
+                    )
+                )
+
+    return predictions
